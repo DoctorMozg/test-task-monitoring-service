@@ -1,7 +1,10 @@
+import asyncio
 from random import randint
 
 import click
 import httpx
+
+from mservice.database.base import create_connection
 
 TEMPLATES = [
     "https://jsonplaceholder.typicode.com/posts/",
@@ -33,7 +36,7 @@ def generate_monitors(url: str, count: int):
                 url,
                 json={
                     "url": f"{template}{i}",
-                    "frequency_sec": randint(5, 30),
+                    "frequency_sec": randint(10, 200),
                     "regexp": ".*" if randint(0, 10) < 2 else None
                 }
             )
@@ -44,12 +47,16 @@ def generate_monitors(url: str, count: int):
 
 @cli.command()
 def migrate():
-    from mservice.dependencies import db_pool
     from mservice.database.migration import create_all_tables
 
-    pool = await db_pool()
-    async with pool.acquire() as conn:
+    async def db_migrate():
+        conn = await create_connection()
         await create_all_tables(conn)
+        await conn.close()
+
+    click.echo('Starting migration')
+    asyncio.get_event_loop().run_until_complete(db_migrate())
+    click.echo('Finishing migration')
 
 
 if __name__ == "__main__":

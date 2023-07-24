@@ -1,4 +1,3 @@
-import datetime
 import re
 from dataclasses import dataclass
 from datetime import timedelta
@@ -68,7 +67,7 @@ class MonitorDao:
                 monitor_id, ts, http_status, response_time_ms, regexp_found, error
             )
             VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING scan
+        RETURNING monitor_id
     """
 
     connection: Connection
@@ -160,7 +159,7 @@ class MonitorDao:
             self, items: list[tuple[int, SiteMetricSchema]]
     ):
         """
-        Batch-insert for scan results
+        Batch-insert for monitoring results
         :param items: scan results to insert
         """
         await self.connection.executemany(

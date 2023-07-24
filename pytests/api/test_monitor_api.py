@@ -5,7 +5,6 @@ from httpx import AsyncClient
 from pydantic_core import Url
 
 from mservice.database.monitor_dao import MonitorDao
-from mservice.utils import utc_tz_now
 
 
 @pytest.mark.asyncio

@@ -16,6 +16,7 @@ x-defs:
 services:
   migrate:
     <<: *main_server
+    restart: on-failure
     command: [ 'migrate' ]
 
   api:

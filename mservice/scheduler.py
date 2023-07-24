@@ -97,6 +97,8 @@ async def monitors_update_task():
                 f"(it took {task_elapsed_time} seconds)"
             )
 
+            if sync_count >= settings.BATCH_FETCH_AMOUNT:
+                logger.debug("Skipping waiting - max amount")
             if task_elapsed_time < settings.POLL_INTERVAL:
                 sleep_time = settings.POLL_INTERVAL - task_elapsed_time
                 logger.debug(f"Going to sleep for {sleep_time} seconds")
