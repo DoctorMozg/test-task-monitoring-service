@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Annotated
 
 from asyncpg import Pool
@@ -5,18 +6,32 @@ from fastapi import Depends
 
 from mservice.database.base import create_pool
 
-POOL_HOLDER = {}
+
+class DatabasePoolHolder:
+
+    def __init__(self):
+        self._pool = None
+
+    async def provide_pool(self):
+        """
+        Lazily initializes and returns pool of connections
+        :return: initialized pool
+        """
+        if self._pool is None:
+            self._pool = await create_pool()
+
+        return self._pool
+
+
+pool_holder = DatabasePoolHolder()
 
 
 async def db_pool():
     """
-    Global connection pool. Stores it into the global variable. A little dirty
-    but is needed for FastAPI.
+    Global connection pool dependency.
     :return: initialized connection pool
     """
-    if 'pool' not in POOL_HOLDER:
-        POOL_HOLDER['pool'] = await create_pool()
-    return POOL_HOLDER['pool']
+    return await pool_holder.provide_pool()
 
 
 async def db_connection(pool: Annotated[Pool, Depends(db_pool)]):
