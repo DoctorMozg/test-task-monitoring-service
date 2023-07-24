@@ -56,7 +56,7 @@ async def test_creation_malformed_regexp(monitor_dao: MonitorDao):
 async def test_list(monitor_dao: MonitorDao, generate_items):
     await generate_items(50)
 
-    items = await monitor_dao.select_unlocked(datetime.datetime.now(), 60)
+    items = await monitor_dao.select_unlocked(60)
     assert len(items) == 50, "Not all items are selected"
 
 
@@ -84,13 +84,13 @@ async def test_list_mt(database: Pool, generate_items):
         mdao1 = MonitorDao(conn1)
         mdao2 = MonitorDao(conn2)
 
-        items1 = await mdao1.select_unlocked(datetime.datetime.now(), 30)
+        items1 = await mdao1.select_unlocked(30)
         assert len(items1) == 30, "Not all items are selected"
 
-        items2 = await mdao2.select_unlocked(datetime.datetime.now(), 30)
+        items2 = await mdao2.select_unlocked(30)
         assert len(items2) == 20, "Should get only 20 which are left unlocked"
 
-    items3 = await mdao1.select_unlocked(datetime.datetime.now(), 60)
+    items3 = await mdao1.select_unlocked(60)
     assert len(items3) == 50, "Must have all items unlocked after the transactions"
 
 

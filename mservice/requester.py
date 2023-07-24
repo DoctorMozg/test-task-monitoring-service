@@ -24,6 +24,12 @@ class RequestFailedSchema:
 
 @validate_call
 async def request_url(url: AnyUrl) -> RequestSuccessSchema | RequestFailedSchema:
+    """
+    Makes a request to the provided URL and returns all needed metadata.
+    :param url: URL to look at
+    :return: RequestSuccessSchema if everything is fine or RequestFailedSchema
+    when encountered an error
+    """
     try:
         async with httpx.AsyncClient() as client:
             r = await client.get(

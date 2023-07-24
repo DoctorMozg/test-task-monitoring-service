@@ -6,6 +6,11 @@ logger = logging.getLogger(__name__)
 
 
 async def create_all_tables(conn: Connection):
+    """
+    Creates all the tables which are needed for program execution
+    :param conn: connection to the DB
+    """
+
     logger.debug("Checking migration")
     async with conn.transaction():
 

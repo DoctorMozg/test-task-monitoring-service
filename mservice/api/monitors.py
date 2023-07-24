@@ -3,12 +3,13 @@ from datetime import timedelta
 from typing import Annotated
 
 from asyncpg import Connection
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, HTTPException
 from pydantic import NonNegativeInt
 from pydantic.dataclasses import dataclass
 from pydantic_core import Url
+from starlette import status
 
-from mservice.database.monitor_dao import MonitorDao
+from mservice.database.monitor_dao import MonitorDao, WrongRegexException
 from mservice.schema.metrics import FrequencySec
 from mservice.dependencies import db_connection
 
@@ -39,16 +40,22 @@ class UrlMonitorCreationRequest:
     regexp: str | None
 
 
-@router.post('/', response_model=CreatedItemMessageResponse)
+@router.post('/', status_code=status.HTTP_201_CREATED)
 async def create(
     new_monitor: UrlMonitorCreationRequest,
     dao: MonitorDao = Depends(monitor_dao),
-):
-    monitor_id = await dao.create(
-        Url(new_monitor.url),
-        timedelta(seconds=new_monitor.frequency_sec),
-        new_monitor.regexp
-    )
+) -> CreatedItemMessageResponse:
+    try:
+        monitor_id = await dao.create(
+            Url(new_monitor.url),
+            timedelta(seconds=new_monitor.frequency_sec),
+            new_monitor.regexp
+        )
+    except WrongRegexException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed creating monitor due to malformed regexp"
+        ) from e
 
     logger.info(
         f"Created a new URL monitor {new_monitor.url} with id {monitor_id}"
@@ -57,11 +64,11 @@ async def create(
     return CreatedItemMessageResponse(monitor_id)
 
 
-@router.delete('/{id}/', response_model=DeletionMessageResponse)
+@router.delete('/{id}/')
 async def delete(
         id: Annotated[NonNegativeInt, Path(title="ID of monitor for removal")],
         dao: MonitorDao = Depends(monitor_dao),
-):
+) -> DeletionMessageResponse:
     is_removed = await dao.remove(id)
 
     message = (

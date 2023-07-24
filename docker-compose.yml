@@ -24,10 +24,6 @@ services:
       - "8000:8000"
     command: [ 'server' ]
 
-  worker1:
-    <<: *main_server
-    command: [ 'worker' ]
-
-  worker2:
+  worker:
     <<: *main_server
     command: [ 'worker' ]

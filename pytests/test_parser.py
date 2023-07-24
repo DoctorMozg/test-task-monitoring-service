@@ -20,7 +20,7 @@ from mservice.parser import find_pattern
         ),
         pytest.param(
             'sample text ' * 10000,
-            r'[sample]+',
+            r'[text]+',
             True,
             id='huge string check',
         ),
@@ -32,7 +32,6 @@ from mservice.parser import find_pattern
             ),
     ]
 )
-@pytest.mark.asyncio
-async def test_parser(text: str, pattern: str, result: bool):
-    result_returned = await find_pattern(text, pattern)
+def test_parser(text: str, pattern: str, result: bool):
+    result_returned = find_pattern(text, pattern)
     assert result_returned == result, "Found result must match"

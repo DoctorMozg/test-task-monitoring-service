@@ -16,6 +16,9 @@ class WrongRegexException(Exception):
 
 @dataclass
 class MonitorDao:
+    """
+    DAO for working with monitors.
+    """
 
     INSERT = """
         INSERT INTO
@@ -39,10 +42,10 @@ class MonitorDao:
     SELECT_UNLOCKED = """
         SELECT * FROM monitors
             WHERE
-                next_sync <= $1
+                next_sync <= CURRENT_TIMESTAMP
                 AND active
         ORDER BY next_sync
-            LIMIT $2
+            LIMIT $1
         FOR UPDATE
         SKIP LOCKED
     """
@@ -78,6 +81,13 @@ class MonitorDao:
     async def create(
             self, url: AnyUrl, interval: timedelta, regexp: str | None
     ) -> int:
+        """
+        Creates one monitor
+        :param url: URL for monitoring
+        :param interval: Interval for executing checks
+        :param regexp: [optional] regular expression to check in response body
+        :return: ID of the created monitor
+        """
         if regexp is not None:
             try:
                 re.compile(regexp)
@@ -97,6 +107,11 @@ class MonitorDao:
     async def remove(
             self, id: NonNegativeInt
     ) -> bool:
+        """
+        Marks monitor as deleted. Doesn't delete all the monitor data.
+        :param id: monitor ID for deactivating
+        :return: TRUE if monitor was deactivated
+        """
         removed_id = await self.connection.fetchval(
             self.DELETE, id
         )
@@ -107,6 +122,10 @@ class MonitorDao:
     async def reschedule(
             self, ids: list[NonNegativeInt]
     ):
+        """
+        Reschedules monitor - bumps up the next_sync time by interval amount.
+        :param ids: monitor to reschedule
+        """
         rescheduled_list = await self.connection.fetch(
             self.RESCHEDULE, ids
         )
@@ -115,22 +134,36 @@ class MonitorDao:
 
     @validate_call
     async def select_unlocked(
-            self, execute_before: datetime.datetime, limit: PositiveInt
+            self, limit: PositiveInt
     ) -> list[MonitorModel]:
+        """
+        Selects only non-locked entities (locked entity means that it is
+        currently being processed) and locks them.
+        :param limit: max amount of entities to select
+        :return: found lock-free entities
+        """
         unlocked_list = await self.connection.fetch(
-            self.SELECT_UNLOCKED, execute_before, limit
+            self.SELECT_UNLOCKED, limit
         )
 
         return [self._db_to_model(row) for row in unlocked_list]
 
     async def count(self) -> int:
+        """
+        Getting total monitors count
+        :return: monitors count
+        """
         return await self.connection.fetchval(self.COUNT_ACTIVE)
 
     @validate_call
     async def create_log_items_from_schema(
             self, items: list[tuple[int, SiteMetricSchema]]
-    ) -> int:
-        monitor_id = await self.connection.executemany(
+    ):
+        """
+        Batch-insert for scan results
+        :param items: scan results to insert
+        """
+        await self.connection.executemany(
             self.INSERT_LOG,
             [
                 (
@@ -144,5 +177,3 @@ class MonitorDao:
                 for monitor_id, item in items
             ]
         )
-
-        return monitor_id

@@ -15,6 +15,3 @@ MAX_PING_INTERVAL = int(os.environ.get("MIN_PING_INTERVAL", 300))
 POLL_INTERVAL = float(os.environ.get("POLL_INTERVAL", 1))
 BATCH_FETCH_AMOUNT = int(os.environ.get("BATCH_FETCH_AMOUNT", 100))
 REQUEST_TIMEOUT = float(os.environ.get("REQUEST_TIMEOUT", 5.0))
-SEPARATE_REGEX_PARSE_MIN_SIZE = int(
-    os.environ.get("SEPARATE_REGEX_PARSE_MIN_SIZE", 50000)
-)

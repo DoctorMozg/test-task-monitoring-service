@@ -1,20 +1,16 @@
-import asyncio
 import re
-from concurrent.futures import ProcessPoolExecutor
-
-from mservice import settings
-
-process_executor = ProcessPoolExecutor()
 
 
-def find_pattern_sync(source: str, regexp: str) -> bool:
-    return re.match(regexp, source) is not None
+def find_pattern(source: str, regexp: str) -> bool:
+    """
+    Searches source for regexp.
 
+    WARNING. Python regexp support is quite slow, but assuming there won't be
+    tens of thousands of chars to search in it is fast enough for async
+    environment. In other cases multiprocessing should be considered.
 
-async def find_pattern(source: str, regexp: str) -> bool:
-    if len(source) > settings.SEPARATE_REGEX_PARSE_MIN_SIZE:
-        return await asyncio.get_event_loop().run_in_executor(
-            process_executor, find_pattern_sync, source, regexp
-        )
-
-    return find_pattern_sync(source, regexp)
+    :param source: source text to search in
+    :param regexp: search request
+    :return: True if found any items
+    """
+    return re.search(regexp, source, re.MULTILINE) is not None

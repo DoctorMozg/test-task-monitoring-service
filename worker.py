@@ -8,6 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 async def main():
+    """
+    Runs an async task for monitoring URLs
+    """
     prepare_logger()
     logger.info("Starting monitoring worker")
     await monitors_update_task()

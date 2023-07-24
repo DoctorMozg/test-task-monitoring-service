@@ -23,9 +23,7 @@ async def test_creation(client: AsyncClient, monitor_dao: MonitorDao):
     result: dict = rv.json()
     assert result['id'] > 0, 'Should have an ID assigned'
 
-    present_items = await monitor_dao.select_unlocked(
-        utc_tz_now(), 1000
-    )
+    present_items = await monitor_dao.select_unlocked(1000)
     assert len(present_items) == 1, 'Item should be in the database and returned'
 
 
@@ -41,7 +39,5 @@ async def test_deletion(client: AsyncClient, monitor_dao: MonitorDao):
     result: dict = rv.json()
     assert result['removed'], 'Should be true if removed an entity'
 
-    present_items = await monitor_dao.select_unlocked(
-        utc_tz_now(), 1000
-    )
+    present_items = await monitor_dao.select_unlocked(1000)
     assert len(present_items) == 0, 'All items should be removed and not found'

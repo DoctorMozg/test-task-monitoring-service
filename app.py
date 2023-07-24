@@ -1,18 +1,19 @@
 import logging
 import time
-from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request
 
 from mservice.api import init_routers
-from mservice.database.migration import create_all_tables
-from mservice.dependencies import db_pool
 from mservice.utils import prepare_logger
 
 logger = logging.getLogger(__name__)
 
 
 def init_middleware(main_app: FastAPI):
+    """
+    Initializes middleware. For now, it's just a simple logger.
+    :param main_app: FastAPI app
+    """
     @main_app.middleware('http')
     async def log_request(request: Request, call_next):
         start = time.monotonic()
@@ -24,6 +25,10 @@ def init_middleware(main_app: FastAPI):
 
 
 def create_application():
+    """
+    Creates and initializes FastAPI application
+    :return: initialized FastAPI application
+    """
     prepare_logger()
 
     main_app = FastAPI(

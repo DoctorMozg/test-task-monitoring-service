@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 
 
 async def _sync_item(item: MonitorModel) -> tuple[int, SiteMetricSchema]:
+    """
+    Makes a request to the server and returns a populated metric.
+    :param item: monitor to work with
+    :return: populated metric
+    """
     request_result = await request_url(item.url)
     request_time = utc_tz_now()
 
@@ -27,7 +32,7 @@ async def _sync_item(item: MonitorModel) -> tuple[int, SiteMetricSchema]:
     regexp_found = (
         False
         if item.regexp is None
-        else await find_pattern(request_result.body, item.regexp)
+        else find_pattern(request_result.body, item.regexp)
     )
 
     response_time_ms = round(request_result.response_time.total_seconds() * 1000)
@@ -43,18 +48,22 @@ async def _sync_item(item: MonitorModel) -> tuple[int, SiteMetricSchema]:
 
 
 async def _sync_batch(connection: Connection) -> int:
+    """
+    Runs one batch of monitors, persists collected metrics and reschedules
+    monitors for the next run.
+    Uses settings.BATCH_FETCH_AMOUNT in order to determine size of the batch.
+    :param connection: database connection
+    :return: amount of updated items
+    """
     async with connection.transaction():
         mdao = MonitorDao(connection)
-        current_time = utc_tz_now()
 
-        unlocked_items = await mdao.select_unlocked(
-            current_time, settings.BATCH_FETCH_AMOUNT
-        )
+        unlocked_items = await mdao.select_unlocked(settings.BATCH_FETCH_AMOUNT)
 
         if len(unlocked_items) == 0:
             logger.info("No items to sync - skipping")
 
-        logger.info(f"Syncing {len(unlocked_items)} monitors on {current_time}")
+        logger.info(f"Syncing {len(unlocked_items)} monitors")
 
         results = await asyncio.gather(
             *[_sync_item(item) for item in unlocked_items]
@@ -70,6 +79,10 @@ async def _sync_batch(connection: Connection) -> int:
 
 
 async def monitors_update_task():
+    """
+    Task for periodical monitor updates.
+    Uses only one connection. Can be furter
+    """
     connection = await create_connection()
 
     try:
