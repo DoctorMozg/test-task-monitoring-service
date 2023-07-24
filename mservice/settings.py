@@ -1,0 +1,20 @@
+import os
+
+# SHARED SETTINGS
+DB_CONNECTION_STRING = os.environ.get("DB_CONNECTION_STRING")
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+
+
+# API-SPECIFIC SETTINGS
+DB_MAX_POOL_SIZE = int(os.environ.get("MAX_POOL_SIZE", 5))
+MIN_PING_INTERVAL = int(os.environ.get("MIN_PING_INTERVAL", 5))
+MAX_PING_INTERVAL = int(os.environ.get("MIN_PING_INTERVAL", 300))
+
+
+# WORKER-SPECIFIC SETTINGS
+POLL_INTERVAL = float(os.environ.get("POLL_INTERVAL", 1))
+BATCH_FETCH_AMOUNT = int(os.environ.get("BATCH_FETCH_AMOUNT", 100))
+REQUEST_TIMEOUT = float(os.environ.get("REQUEST_TIMEOUT", 5.0))
+SEPARATE_REGEX_PARSE_MIN_SIZE = int(
+    os.environ.get("SEPARATE_REGEX_PARSE_MIN_SIZE", 50000)
+)

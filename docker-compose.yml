@@ -1,0 +1,33 @@
+version: '3.8'
+x-defs:
+  main_server: &main_server
+    image: url-monitor-server:latest
+    restart: unless-stopped
+    command: server
+    environment:
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - prod.env
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+services:
+  migrate:
+    <<: *main_server
+    command: [ 'migrate' ]
+
+  api:
+    <<: *main_server
+    ports:
+      - "8000:8000"
+    command: [ 'server' ]
+
+  worker1:
+    <<: *main_server
+    command: [ 'worker' ]
+
+  worker2:
+    <<: *main_server
+    command: [ 'worker' ]
